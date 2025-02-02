@@ -1,4 +1,4 @@
-#Embedded-and-Real-Time-Systems
+# Embedded-and-Real-Time-Systems
 
 Tasks I have completed to prepare for the faculty exam, including practical work in Embedded Systems and Real-Time Systems. All code was written in C.
 
