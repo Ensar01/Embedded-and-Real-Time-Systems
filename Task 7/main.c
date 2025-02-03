@@ -46,6 +46,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* Definitions for defaultTask */
+TIM_HandleTypeDef htim4;
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
@@ -118,20 +119,7 @@ void zadatak3(void *nekiParam)
 	}
 }
 
-void InterruptServiceRoutine_EXTI(void* nekiParam)
-{
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);
-	for (int i = 0; i < 10000000; i++)
-	{
-	}
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
 
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-	for (int i = 0; i < 10000000; i++)
-	{
-	}
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -204,6 +192,7 @@ int main(void)
 	 xTaskCreate(zadatak1,"Zadatak 1",256,NULL,1,&zadatak1handle);
 	 xTaskCreate(zadatak2,"Zadatak 2",256,NULL,1,&zadatak2handle);
 	 xTaskCreate(zadatak3,"Zadatak 3",256,NULL,1,&zadatak3handle);
+	 HAL_TIM_Base_Start_IT(&htim4);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -311,16 +300,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	/*Prevent unused argument(s) compilation warning*/
-	if (GPIO_Pin == GPIO_Pin_12)
-	{
-		InterruptServiceRoutine_EXTI(NULL);
-	}
-	UNUSED(GPIO_Pin);
-	
-}
 
 /* USER CODE END 4 */
 
@@ -353,7 +332,10 @@ void StartDefaultTask(void *argument)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* USER CODE BEGIN Callback 0 */
-
+	if (htim->Instance == TIM4) {
+		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
+		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+	}
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM2) {
     HAL_IncTick();
