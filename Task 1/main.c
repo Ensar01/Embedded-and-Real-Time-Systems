@@ -66,11 +66,11 @@ void zadatak1(void *nekiParam)
 {
 	for(;;)
 	{
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, 1);
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
 		
 		for(int i = 0; i<10000000; i++)
 		{}
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, 0);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
 			vTaskDelay(100);
 		
 	}

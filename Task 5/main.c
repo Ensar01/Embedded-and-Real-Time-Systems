@@ -46,6 +46,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* Definitions for defaultTask */
+IWDG_HandleTypeDef hiwdg;
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
@@ -54,6 +55,7 @@ const osThreadAttr_t defaultTask_attributes = {
 };
 /* USER CODE BEGIN PV */
 TaskHandle_t zadatak1handle, zadatak2handle, zadatak3handle;
+SemaphoreHandle_t razrjesivacKonflikta, razrjesivacKonflikta1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,17 +66,32 @@ void StartDefaultTask(void *argument);
 /* USER CODE BEGIN PFP */
 void zadatak1(void *nekiParam)
 {
-	for(;;)
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+	for (int i = 0; i < 10000000; i++)
+	{}
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
+	for (int i = 0; i < 10000000; i++)
+	{}
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
+
+	for (;;)
 	{
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
-		
-		for(int i = 0; i<10000000; i++)
-		{}
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+		if(xSemaphoreTake(razrjesivacKonflikta, portMAX_DELAY) == pdTRUE)
+		{
+			if (xSemaphoreTake(razrjesivacKonflikta1, portMAX_DELAY) == pdTRUE)
+			{
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
+
+				for (int i = 0; i < 10000000; i++)
+				{}
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+				xSemaphoreGive(razrjesivacKonflikta1);
+			}
+			xSemaphoreGive(razrjesivacKonflikta);
 			vTaskDelay(100);
-			vTaskResume(zadatak3handle);
-			xTaskNotifyGive(zadatak2handle);
-			vTaskSuspend(NULL);
+		}
 		
 	}
 }
@@ -82,29 +99,35 @@ void zadatak2(void *nekiParam)
 {
 	for(;;)
 	{
-	  ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
 		
-		for(int i = 0; i<10000000; i++)
-		{}
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
-		vTaskDelay(100);
-		
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
+
+			for (int i = 0; i < 10000000; i++)
+			{}
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+			vTaskDelay(100);
+			HAL_IWDG_Refresh(&hiwdg);
 	}
 }
 void zadatak3(void *nekiParam)
 {
 	for(;;)
 	{
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1,GPIO_PIN_SET);
-		
-		for(int i = 0; i<10000000; i++)
-		{}
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+		if (xSemaphoreTake(razrjesivacKonflikta, portMAX_DELAY) == pdTRUE)
+		{
+			if (xSemaphoreTake(razrjesivacKonflikta1, portMAX_DELAY) == pdTRUE)
+			{
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
+
+				for (int i = 0; i < 10000000; i++)
+				{}
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+				xSemaphoreGive(razrjesivacKonflikta1);
+			}
+			xSemaphoreGive(razrjesivacKonflikta1);
 			vTaskDelay(100);
-			vTaskResume(zadatak1handle);
-			vTaskSuspend(NULL)
-		
+		}
+
 	}
 }
 /* USER CODE END PFP */
@@ -172,6 +195,10 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+     razrjesivacKonflikta = xSemaphoreCreateMutex();
+	 xSemaphoreGive(razrjesivacKonflikta);
+	 razrjesivacKonflikta1 = xSemaphoreCreateMutex();
+	 xSemaphoreGive(razrjesivacKonflikta1);
 	 xTaskCreate(zadatak1,"Zadatak 1",256,NULL,1,&zadatak1handle);
 	 xTaskCreate(zadatak2,"Zadatak 2",256,NULL,1,&zadatak2handle);
 	 xTaskCreate(zadatak3,"Zadatak 3",256,NULL,1,&zadatak3handle);

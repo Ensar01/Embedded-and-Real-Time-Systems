@@ -67,16 +67,16 @@ void zadatak1(void *nekiParam)
 {
 	for (;;)
 	{
-		if(xSemaphoteTake(razrjesivacKonflikta, portMAX_DELAY) == pdTRUE)
+		if(xSemaphoreTake(razrjesivacKonflikta, portMAX_DELAY) == pdTRUE)
 		{
-			if (xSemaphoteTake(razrjesivacKonflikta1, portMAX_DELAY) == pdTRUE)
+			if (xSemaphoreTake(razrjesivacKonflikta1, portMAX_DELAY) == pdTRUE)
 			{
-				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, 1);
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
 
 				for (int i = 0; i < 10000000; i++)
 				{
 				}
-				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, 0);
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
 				xSemaphoreGive(razrjesivacKonflikta1);
 			}
 			xSemaphoreGive(razrjesivacKonflikta);
@@ -96,18 +96,15 @@ void zadatak2(void *nekiParam)
 			{}
 			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
 			vTaskDelay(100);
-			xSemaphoreGive(razrjesivacKonflikta);
-		
-			
 	}
 }
 void zadatak3(void *nekiParam)
 {
 	for(;;)
 	{
-		if (xSemaphoteTake(razrjesivacKonflikta1, portMAX_DELAY) == pdTRUE)
+		if (xSemaphoreTake(razrjesivacKonflikta1, portMAX_DELAY) == pdTRUE)
 		{
-			if (xSemaphoteTake(razrjesivacKonflikta, portMAX_DELAY) == pdTRUE)
+			if (xSemaphoreTake(razrjesivacKonflikta, portMAX_DELAY) == pdTRUE)
 			{
 				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
 
